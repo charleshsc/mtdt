@@ -4,3 +4,5 @@ MT50/
 
 save/
 debug.py
+runs/debug.sh
+*.sh
