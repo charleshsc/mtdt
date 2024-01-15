@@ -30,7 +30,7 @@ from logger import setup_logger, logger
 @torch.no_grad()
 def cosine_annealing(alpha_t,eta_max=30,eta_min=0):
     
-    return int(eta_min+0.5*(eta_max-eta_min)*(1+np.cos(np.pi*alpha_t)))
+    return int(eta_max+0.5*(eta_min-eta_max)*(1+np.cos(2*np.pi*alpha_t)))
 def set_seed(seed):
     random.seed(seed)
     os.environ['PYTHONHASHSEED']=str(seed)
@@ -63,10 +63,64 @@ mt50_task_list = ['basketball-v2', 'bin-picking-v2', 'button-press-topdown-v2',
     'plate-slide-back-side-v2',  'soccer-v2', 'push-wall-v2',  'shelf-place-v2', 'sweep-into-v2', 'sweep-v2', 'window-open-v2',
     'window-close-v2','assembly-v2','button-press-topdown-wall-v2','hammer-v2','peg-unplug-side-v2',
     'reach-wall-v2', 'stick-push-v2', 'stick-pull-v2', 'box-close-v2']
+mt30_task_list = ['basketball-v2', 'bin-picking-v2', 'button-press-topdown-v2',
+    'button-press-v2', 'button-press-wall-v2',
+     'coffee-button-v2',
+    'coffee-pull-v2', 'coffee-push-v2', 'dial-turn-v2', 'disassemble-v2',
+     'door-close-v2', 'door-lock-v2',
+    'door-open-v2', 'door-unlock-v2', 'hand-insert-v2', 'drawer-close-v2', 'drawer-open-v2', 'faucet-open-v2',
+    'faucet-close-v2',  'handle-press-side-v2', 'handle-press-v2', 'handle-pull-side-v2', 'handle-pull-v2',
+    'lever-pull-v2', 'peg-insert-side-v2', 'pick-place-wall-v2', 'pick-out-of-hole-v2', 'reach-v2', 'push-back-v2',
+    'push-v2']
+seen_task_list=['basketball-v2', 'bin-picking-v2', 'button-press-topdown-v2',
+    'button-press-v2',
+     'coffee-button-v2',
+    'coffee-pull-v2', 'coffee-push-v2', 'dial-turn-v2', 'disassemble-v2',
+     'door-close-v2', 'door-lock-v2',
+    'door-open-v2', 'hand-insert-v2', 'drawer-close-v2', 'drawer-open-v2',
+    'faucet-close-v2', 'handle-press-v2', 'handle-pull-side-v2', 'handle-pull-v2',
+    'lever-pull-v2', 'peg-insert-side-v2', 'pick-place-wall-v2', 'pick-out-of-hole-v2', 'reach-v2', 'push-back-v2',
+    'push-v2', 'pick-place-v2', 'plate-slide-v2', 'plate-slide-back-v2',
+    'plate-slide-back-side-v2',  'soccer-v2', 'push-wall-v2',  'shelf-place-v2', 'sweep-into-v2', 'sweep-v2', 'window-open-v2',
+    'window-close-v2','assembly-v2','button-press-topdown-wall-v2','hammer-v2','peg-unplug-side-v2', 'reach-wall-v2', 'stick-push-v2', 'stick-pull-v2', 'box-close-v2']
+
+unseen_task_list=['plate-slide-side-v2','handle-press-side-v2','button-press-wall-v2','door-unlock-v2','faucet-open-v2']
+
+
+# seen_task_list=['basketball-v2', 'bin-picking-v2', 'button-press-topdown-v2',
+#     'button-press-v2', 'button-press-wall-v2']
+
+# unseen_task_list=['peg-unplug-side-v2', 'reach-wall-v2']
+# 30tasks
+# mt50_task_list = ['basketball-v2', 'bin-picking-v2', 'button-press-topdown-v2',
+#     'button-press-v2', 'button-press-wall-v2',
+#      'coffee-button-v2',
+#     'coffee-pull-v2', 'coffee-push-v2', 'dial-turn-v2', 'disassemble-v2',
+#      'door-close-v2', 'door-lock-v2',
+#     'door-open-v2', 'door-unlock-v2', 'hand-insert-v2', 'drawer-close-v2', 'drawer-open-v2', 'faucet-open-v2',
+#     'faucet-close-v2',  'handle-press-side-v2', 'handle-press-v2', 'handle-pull-side-v2', 'handle-pull-v2',
+#     'lever-pull-v2', 'peg-insert-side-v2', 'pick-place-wall-v2', 'pick-out-of-hole-v2', 'reach-v2', 'push-back-v2',
+#     'push-v2']
+    #  'pick-place-v2', 'plate-slide-v2', 'plate-slide-side-v2', 'plate-slide-back-v2',
+    # 'plate-slide-back-side-v2',  'soccer-v2', 'push-wall-v2',  'shelf-place-v2', 'sweep-into-v2', 'sweep-v2', 'window-open-v2',
+    # 'window-close-v2','assembly-v2','button-press-topdown-wall-v2','hammer-v2','peg-unplug-side-v2',
+    # 'reach-wall-v2', 'stick-push-v2', 'stick-pull-v2', 'box-close-v2']
 # mt50_task_list = ['basketball-v2', 'bin-picking-v2', 'button-press-topdown-v2',
 #     'button-press-v2', 'button-press-wall-v2']
-mt50_task_list = ['hammer-v2','peg-unplug-side-v2',
-    'reach-wall-v2', 'stick-push-v2', 'stick-pull-v2', 'box-close-v2']
+# mt50_task_list = ['hammer-v2','peg-unplug-side-v2',
+#     'reach-wall-v2', 'stick-push-v2', 'stick-pull-v2', 'box-close-v2']
+
+# 5tasks
+# mt50_task_list = ['basketball-v2', 'bin-picking-v2', 'button-press-topdown-v2',
+#     'button-press-v2', 'button-press-wall-v2']
+    #  ,'coffee-button-v2',
+    # 'coffee-pull-v2', 'coffee-push-v2', 'dial-turn-v2', 'disassemble-v2',
+    #  'door-close-v2', 'door-lock-v2',
+    # 'door-open-v2', 'door-unlock-v2', 'hand-insert-v2', 'drawer-close-v2', 'drawer-open-v2', 'faucet-open-v2',
+    # 'faucet-close-v2',  'handle-press-side-v2', 'handle-press-v2', 'handle-pull-side-v2', 'handle-pull-v2',
+    # 'lever-pull-v2', 'peg-insert-side-v2', 'pick-place-wall-v2', 'pick-out-of-hole-v2', 'reach-v2', 'push-back-v2',
+    # 'push-v2']
+
 
 def experiment_mix_env(
         exp_prefix,
@@ -101,12 +155,17 @@ def experiment_mix_env(
     save_path = variant['save_path']
     timestr = time.strftime("%y%m%d-%H%M%S")
     
-    train_env_name_list, test_env_name_list = mt50_task_list, mt50_task_list
+    #train_env_name_list = seen_task_list
+    #test_env_name_list =  unseen_task_list
+    # train_env_name_list = mt30_task_list
+    # test_env_name_list =  mt30_task_list
 
+    train_env_name_list = mt50_task_list
+    test_env_name_list =  mt50_task_list
     # training envs
     info, _ = get_env_list(train_env_name_list, device, total_env='metaworld', seed=seed)
     # testing envs
-    test_info, test_env_list = get_env_list(test_env_name_list, device,total_env='metaworld_test', seed=seed)
+    test_info, test_env_list = get_env_list(test_env_name_list, device, total_env='metaworld_test', seed=seed)
 
     num_env = len(train_env_name_list)
     exp_prefix = '-'.join(train_env_name_list)
@@ -129,11 +188,17 @@ def experiment_mix_env(
     ######
     # process train and test datasets
     ######
-    # load training dataset
+    # load training dataset --mask_change_max 0
     trajectories_list, prompt_trajectories_list = load_meta_data_prompt(
         train_env_name_list, 
         data_save_path, 
-        True,
+        False,
+    )
+
+    test_trajectories_list, test_prompt_trajectories_list = load_meta_data_prompt(
+        test_env_name_list, 
+        data_save_path, 
+        False,
     )
 
     # process train info
@@ -253,7 +318,7 @@ def experiment_mix_env(
                 
                 # evaluate test
                 test_eval_logs = trainer.eval_iteration_metaworld(
-                    env_masks, get_prompt, prompt_trajectories_list,
+                    env_masks, get_prompt, test_prompt_trajectories_list,
                     eval_episodes, test_env_name_list, test_info, test_info, variant, test_env_list, iter_num=iter + 1, 
                     no_prompt=args.no_prompt, group=group, seperate_test=seperate_test, merge_thres=args.merge_thres)
 
@@ -276,7 +341,7 @@ def experiment_mix_env(
                 
                 for env_name in train_env_name_list:
                     gradient = trainer.update_gradient(
-                        num_steps=2, 
+                        num_steps=10, 
                         no_prompt=args.no_prompt,
                         masks = env_masks[env_name],
                         env_name = env_name,
@@ -290,8 +355,9 @@ def experiment_mix_env(
                 model_vec = parameters_to_vector(trainer.model.parameters())            
 
                 dead_masks_vectors=mask_dead_harmo(harmo_gradient, gradient_set, env_masks_vectors, change_num)
-                generate_masks_vectors=mask_generate_harmo(harmo_gradient, gradient_set, env_masks_vectors, model_vec, thresh=args.conflict_thres, change_num=change_num)
-                
+
+                generate_masks_vectors=mask_generate_harmo(harmo_gradient, gradient_set, env_masks_vectors, \
+                 model_vec, gamma=variant["gamma"], change_num=change_num, mode=variant["select"])
                 
                 for name in env_masks_vectors:
                     env_masks_vectors[name]=env_masks_vectors[name]-generate_masks_vectors[name]+dead_masks_vectors[name]
@@ -359,7 +425,7 @@ if __name__ == '__main__':
     parser.add_argument('--distribution', type=str, default='Gaussian')
     parser.add_argument('--num', type=int, default=None)
     parser.add_argument('--index', action='store_true', default=False)
-
+    parser.add_argument('--select', type=str, default='fisher')
     parser.add_argument('--mode', type=str, default='normal')
     parser.add_argument('--K', type=int, default=20)
     parser.add_argument('--pct_traj', type=float, default=1.)
@@ -389,7 +455,7 @@ if __name__ == '__main__':
     parser.add_argument('--eta_max', type=int, default=1000)
     parser.add_argument('--sparsity', type=float, default=0.5)
     parser.add_argument('--mask_change_max', type=float, default=30)
-    parser.add_argument('--conflict_thres', type=float, default=0.)
+    parser.add_argument('--gamma', type=float, default=10)
     parser.add_argument('--merge_thres', type=float, default=1.)
     parser.add_argument('--special_embedding', action='store_true', default=False)
     parser.add_argument('--prefix_name', type=str, default='MT50')

@@ -24,7 +24,6 @@ def mask_dead_harmo(harmo_gradient, gradient_set, mask_vectors,change_num=10):
     num_dead=change_num
     new_vectors={name:torch.zeros(mask_vectors[name].size()).cuda() for name in mask_vectors}
 
-
     for name in mask_vectors:
         simi_vec=harmo_gradient*gradient_set[name]+(1-mask_vectors[name]*100000)
 
@@ -34,33 +33,25 @@ def mask_dead_harmo(harmo_gradient, gradient_set, mask_vectors,change_num=10):
     return new_vectors
 
 @torch.no_grad()
-def mask_generate_harmo(harmo_gradient, gradient_set, mask_vectors, model_vec, thresh=0, change_num=10):
-    # from 1 to 0
-    # find conflict
+def mask_generate_harmo(harmo_gradient, gradient_set, mask_vectors, model_vec, gamma=0, change_num=10,mode="fisher"):
     num_new=change_num
+
     new_vectors={name:torch.zeros(mask_vectors[name].size()).cuda() for name in mask_vectors}
-    mask_vectors_new={name:mask_vectors[name]*100000 for name in mask_vectors} # find original mask position with 1
+    #mask_vectors_new={name:mask_vectors[name]*100000*torch.ones(mask_vectors[name].size()).cuda() for name in mask_vectors}
     eps=1e-6
-
+    model_vec_copy=model_vec.clone().detach()
+    
     for name in mask_vectors:
-        model_vec_copy=model_vec.clone().detach()
-        simi_vec=harmo_gradient*gradient_set[name]*mask_vectors_new[name]
-        num_conflict=torch.sum(simi_vec<thresh)     
-
-        if num_conflict>=num_new:
-            
-            value, index = torch.topk(simi_vec,k=num_new,largest=False)
-            new_vectors[name][index] = 1
-        else:
-            value, index = torch.topk(simi_vec,k=num_conflict,largest=False)
-            new_vectors[name][index]=1
-            model_vec_copy[index] = 100000
-            index = (mask_vectors[name] == 0)
-            model_vec_copy[index] = 100000
-            value, index = torch.topk(model_vec_copy,k=num_new-num_conflict,largest=False)
-            new_vectors[name][index]=1
-
+        harmo_score=((1-mask_vectors[name])*100000).cuda()
+        harmo_score=harmo_score+harmo_gradient*gradient_set[name]*gamma
+        if mode =="fisher":
+            harmo_score=harmo_score+(gradient_set[name])**2
+        elif mode =="magnitude":
+            harmo_score=harmo_score+torch.abs(model_vec_copy)
+        value, index = torch.topk(harmo_score,k=num_new,largest=False)
+        new_vectors[name][index]=1
     return new_vectors
+
 
 def get_new_masks(dead_masks,new_masks,env_masks):
     for name in env_masks:

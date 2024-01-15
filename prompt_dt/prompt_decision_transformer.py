@@ -186,10 +186,14 @@ class PromptDecisionTransformer(nn.Module):
 
         return state_preds, action_preds, return_preds
 
-    def get_action(self, env_name, states, actions, rewards, returns_to_go, timesteps, **kwargs):
+    def get_action(self, env_name, states, actions, rewards, returns_to_go, timesteps, info, **kwargs):
         # we don't care about the past rewards in this model
-        state_dim = self.info[env_name]['state_dim']
-        act_dim = self.info[env_name]['act_dim']
+        if info is not None:
+            state_dim = info[env_name]['state_dim']
+            act_dim = info[env_name]['act_dim']
+        else:
+            state_dim = self.info[env_name]['state_dim']
+            act_dim = self.info[env_name]['act_dim']
 
         states = states.reshape(1, -1, state_dim)
         actions = actions.reshape(1, -1, act_dim)
