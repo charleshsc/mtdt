@@ -269,11 +269,11 @@ class PromptSequenceTrainer:
         total_mean = []
         total_success = []
         for k, v in total_return_mean.items():
-            # self.logger.record_tabular(f'{group}-{k}-Return', float(v))
+            self.logger.record_tabular(f'{group}-{k}-Return', float(v))
             self.logger.record_tabular(f'{group}-{k}-Success', float(total_success_mean[k]))
             total_mean.append(v)
             total_success.append(total_success_mean[k])
-        # self.logger.record_tabular('Total return mean', np.mean(total_mean))
+        self.logger.record_tabular(f'{group}-Total-return-mean', np.mean(total_mean))
         self.logger.record_tabular(f'{group}-Total-success-mean', np.mean(total_success))
         self.logger.dump_tabular()
         logs[f'{group}-Total-Return-Mean'] = np.mean(total_mean)

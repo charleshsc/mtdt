@@ -192,8 +192,12 @@ class PromptDecisionTransformer(nn.Module):
             state_dim = info[env_name]['state_dim']
             act_dim = info[env_name]['act_dim']
         else:
-            state_dim = self.info[env_name]['state_dim']
-            act_dim = self.info[env_name]['act_dim']
+            if env_name in info.keys():
+                state_dim = info[env_name]['state_dim']
+                act_dim = info[env_name]['act_dim']
+            else:
+                state_dim = info['state_dim']
+                act_dim = info['act_dim']
 
         states = states.reshape(1, -1, state_dim)
         actions = actions.reshape(1, -1, act_dim)

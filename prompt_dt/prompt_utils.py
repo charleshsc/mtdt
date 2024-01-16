@@ -65,6 +65,17 @@ def gen_env(env_name, seed=1, total_env=None, num_eval_episodes=0):
         env_targets = [500, 250]
         scale = 100.
         dversion = 0
+    elif 'ML1-' in env_name:
+        task_name = '-'.join(env_name.split('-')[1:-1])
+        ml1 = metaworld.ML1(task_name, seed=seed) # Construct the benchmark, sampling tasks, note: our example datasets also have seed=1.
+        env = ml1.train_classes[task_name]()  # Create an environment with task
+        task_idx = int(env_name.split('-')[-1])
+        task = ml1.train_tasks[task_idx]
+        env.set_task(task)  # Set task
+        max_ep_len = 500 
+        env_targets= [int(650)]
+        scale = 650.
+        dversion = 0 #compatible
     else:
         if 'metaworld' in total_env:
             task = metaworld.MT1(env_name).train_tasks[0]
@@ -149,9 +160,9 @@ def get_prompt(prompt_trajectories, info, variant):
             if variant["stochastic_prompt"]:
                 traj = prompt_trajectories[int(batch_inds[i])] # random select traj
             else:
-                if i+1 > len(sorted_inds):
-                    i = i % len(sorted_inds)
-                traj = prompt_trajectories[int(sorted_inds[(i+1)])] 
+                if i > len(sorted_inds):
+                    i = 1
+                traj = prompt_trajectories[int(sorted_inds[(-i)])] 
             
             if index is not None:
                 traj = prompt_trajectories[int(sorted_inds[index])]
@@ -481,7 +492,23 @@ def load_meta_data_prompt(env_name_list, data_save_path, optimal=True):
         prompt_trajectories_list.append(cur_task_trajs)
     
     return trajectories_list, prompt_trajectories_list
-                
+
+def load_unseen_data_prompt(env, env_name_list, data_save_path):
+    trajectories_list = []
+    prompt_trajectories_list = []
+    dataset='expert'
+    prompt_mode='expert'
+    for env_name in env_name_list:
+        dataset_path = data_save_path+f'/{env}/{env_name}-{dataset}.pkl'
+        with open(dataset_path, 'rb') as f:
+            trajectories = pickle.load(f)
+        prompt_dataset_path = data_save_path+f'/{env}/{env_name}-prompt-{prompt_mode}.pkl'
+        with open(prompt_dataset_path, 'rb') as f:
+            prompt_trajectories = pickle.load(f)
+        trajectories_list.append(trajectories)
+        prompt_trajectories_list.append(prompt_trajectories)
+    
+    return trajectories_list, prompt_trajectories_list
 
 
 def process_info(env_name_list, trajectories_list, info, mode, dataset, pct_traj, variant, logger):
@@ -519,10 +546,15 @@ def eval_episodes(target_rew, info, variant, env, env_name):
         success = []
         length = []
         for i in range(num_eval_episodes):
+            if type(env) is list:
+                c_env = env[i]
+            else:
+                c_env = env
+            
             with torch.no_grad():
                 ret, lens, suc = prompt_evaluate_episode_rtg(
                     env_name,
-                    env[i],
+                    c_env,
                     state_dim,
                     act_dim,
                     model,
