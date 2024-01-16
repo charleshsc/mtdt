@@ -109,7 +109,7 @@ def experiment_mix_env(
     exp_prefix = '-'.join(train_env_name_list)
     group_name = variant['prefix_name']
     Evaluation_token = 'Evaluation' if Evaluation else '-'
-    exp_prefix = f'{Evaluation_token}-{seed}-{timestr}'
+    exp_prefix = f'{env_name_}-{Evaluation_token}-{seed}-{timestr}'
     if variant['no_prompt']:
         exp_prefix += '_NO_PROMPT'
     if variant['finetune']:
