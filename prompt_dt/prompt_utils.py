@@ -514,7 +514,7 @@ def eval_episodes(target_rew, info, variant, env, env_name):
     num_eval_episodes = variant['num_eval_episodes']
     mode = variant.get('mode', 'normal')
 
-    def fn(model, prompt=None):
+    def fn(model, info, prompt=None):
         returns = []
         success = []
         length = []
@@ -536,7 +536,8 @@ def eval_episodes(target_rew, info, variant, env, env_name):
                     prompt=prompt,
                     no_r=variant['no_r'],
                     no_rtg=variant['no_rtg'],
-                    no_state_normalize=variant['no_state_normalize']                
+                    no_state_normalize=variant['no_state_normalize'],
+                    info=info,               
                     )
             returns.append(ret)
             length.append(lens)

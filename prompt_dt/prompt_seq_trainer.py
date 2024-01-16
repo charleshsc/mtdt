@@ -239,7 +239,7 @@ class PromptSequenceTrainer:
 
             
             for eval_fn in self.eval_fns:
-                outputs = eval_fn(model, prompt=self.prompt)
+                outputs = eval_fn(model, prompt=self.prompt, info=info)
                 for k, v in outputs.items():
                     logs[f'{group}-evaluation/{k}'] = v
 

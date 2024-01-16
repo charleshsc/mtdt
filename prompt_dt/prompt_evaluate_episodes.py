@@ -97,7 +97,8 @@ def prompt_evaluate_episode_rtg(
         prompt=None,
         no_r=False,
         no_rtg=False,
-        no_state_normalize=False
+        no_state_normalize=False,
+        info=None,
     ):
 
     model.eval()
@@ -138,7 +139,8 @@ def prompt_evaluate_episode_rtg(
                 rewards.to(dtype=torch.float32),
                 target_return.to(dtype=torch.float32),
                 timesteps.to(dtype=torch.long),
-                prompt=prompt
+                prompt=prompt,
+                info=info,
             )
         else:
             action = model.get_action(
@@ -148,7 +150,8 @@ def prompt_evaluate_episode_rtg(
                 rewards.to(dtype=torch.float32),
                 target_return.to(dtype=torch.float32),
                 timesteps.to(dtype=torch.long),
-                prompt=prompt
+                prompt=prompt,
+                info=info,
             )
             
         actions[-1] = action
