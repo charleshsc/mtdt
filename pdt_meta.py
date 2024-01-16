@@ -76,7 +76,10 @@ def experiment_mix_env(
 
     config_path_dict={
         'ML1-pick-place-v2': "ML1-pick-place-v2/ML1-pick-place-v2.json",
-        'MetaWorld': "MetaWorld/task.json"
+        'MetaWorld': "MetaWorld/task.json",
+        'cheetah_vel': "cheetah_vel/cheetah_vel_40.json",
+        'cheetah_dir': "cheetah_dir/cheetah_dir_2.json",
+        'ant_dir': "ant_dir/ant_dir_50.json",
     }
     task_config = os.path.join(variant['config_path'], config_path_dict[variant['env']])
     with open(task_config, 'r') as f:
@@ -90,19 +93,17 @@ def experiment_mix_env(
             train_env_name_list, test_env_name_list = task_config.mt5_task_list, task_config.mt5_task_list
         else:
             raise NotImplementedError("please use the 50, 30, 5")
-    elif variant['env'] == 'ML1-pick-place-v2':
+    else:
         train_env_name_list, test_env_name_list = [], []
         for task_ind in task_config.train_tasks:
             train_env_name_list.append(args.env +'-'+ str(task_ind))
         for task_ind in task_config.test_tasks:
             test_env_name_list.append(args.env +'-'+ str(task_ind))
-    else:
-        raise NotImplementedError("Please use the Env in the choice")
 
     # training envs
-    info, _ = get_env_list(train_env_name_list, device, total_env='metaworld', seed=seed)
+    info, _ = get_env_list(train_env_name_list, device, total_env='metaworld', seed=seed, config_save_path=variant['config_path'])
     # testing envs
-    test_info, test_env_list = get_env_list(test_env_name_list, device, total_env='metaworld_test', seed=seed)
+    test_info, test_env_list = get_env_list(test_env_name_list, device, total_env='metaworld_test', seed=seed, config_save_path=variant['config_path'])
 
     num_env = len(train_env_name_list)
     exp_prefix = '-'.join(train_env_name_list)
@@ -126,19 +127,7 @@ def experiment_mix_env(
     # process train and test datasets
     ######
     # load training dataset --mask_change_max 0
-    if 'ML1' in variant['env']:
-        trajectories_list, prompt_trajectories_list = load_unseen_data_prompt(
-            'ML1-pick-place-v2',
-            train_env_name_list, 
-            data_save_path, 
-        )
-        # load testing dataset
-        test_trajectories_list, test_prompt_trajectories_list = load_unseen_data_prompt(
-            'ML1-pick-place-v2', 
-            test_env_name_list,
-            data_save_path, 
-        )
-    else:
+    if 'MetaWorld' in variant['env']:
         trajectories_list, prompt_trajectories_list = load_meta_data_prompt(
             train_env_name_list, 
             data_save_path, 
@@ -148,6 +137,18 @@ def experiment_mix_env(
             test_env_name_list, 
             data_save_path, 
             False,
+        )
+    else:
+        trajectories_list, prompt_trajectories_list = load_unseen_data_prompt(
+            variant['env'],
+            train_env_name_list, 
+            data_save_path, 
+        )
+        # load testing dataset
+        test_trajectories_list, test_prompt_trajectories_list = load_unseen_data_prompt(
+            variant['env'], 
+            test_env_name_list,
+            data_save_path, 
         )
 
     # process train info
@@ -350,7 +351,7 @@ def experiment_mix_env(
         
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--env', type=str, choices=['MetaWorld', 'ML1-pick-place-v2'], default='MetaWorld') 
+    parser.add_argument('--env', type=str, choices=['MetaWorld', 'ML1-pick-place-v2', 'cheetah_dir', 'cheetah_vel', 'ant_dir'], default='MetaWorld') 
     parser.add_argument('--dataset_mode', type=str, default='medium')
     parser.add_argument('--seed', type=int, default=123)
     parser.add_argument('--test_dataset_mode', type=str, default='medium')

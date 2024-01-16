@@ -5,9 +5,14 @@ import metaworld
 from collections import namedtuple
 from .prompt_evaluate_episodes import prompt_evaluate_episode, prompt_evaluate_episode_rtg
 
+# for mujoco tasks
+from mujoco_control_envs.mujoco_control_envs import HalfCheetahDirEnv, HalfCheetahVelEnv, AntDirEnv
+# for jacopinpad
+from jacopinpad.jacopinpad_gym import jacopinpad_multi
+
 """ constructing envs """
 
-def gen_env(env_name, seed=1, total_env=None, num_eval_episodes=0):
+def gen_env(env_name, seed=1, total_env=None, num_eval_episodes=0, config_save_path=None):
     if env_name == 'hopper':
         env = gym.make('Hopper-v3')
         max_ep_len = 1000
@@ -76,6 +81,41 @@ def gen_env(env_name, seed=1, total_env=None, num_eval_episodes=0):
         env_targets= [int(650)]
         scale = 650.
         dversion = 0 #compatible
+    elif 'cheetah_dir' in env_name:
+        if '0' in env_name:
+            env = HalfCheetahDirEnv([{'direction': 1}], include_goal = False)
+        elif '1' in env_name:
+            env = HalfCheetahDirEnv([{'direction': -1}], include_goal = False)
+        max_ep_len = 200
+        env_targets = [1500]
+        scale = 1000.
+        dversion = 0 #compatible
+    elif 'cheetah_vel' in env_name:
+        task_idx = int(env_name.split('-')[-1])
+        task_paths = f"{config_save_path}/cheetah_vel/config_cheetah_vel_task{task_idx}.pkl"
+        tasks = []
+        with open(task_paths.format(task_idx), 'rb') as f:
+            task_info = pickle.load(f)
+            assert len(task_info) == 1, f'Unexpected task info: {task_info}'
+            tasks.append(task_info[0])
+        env = HalfCheetahVelEnv(tasks, include_goal = False)
+        max_ep_len = 200
+        env_targets = [0]
+        scale = 500.
+        dversion = 0 #compatible
+    elif 'ant_dir' in env_name:
+        task_idx = int(env_name.split('-')[-1])
+        task_paths = f"{config_save_path}/ant_dir/config_ant_dir_task{task_idx}.pkl"
+        tasks = []
+        with open(task_paths.format(task_idx), 'rb') as f:
+            task_info = pickle.load(f)
+            assert len(task_info) == 1, f'Unexpected task info: {task_info}'
+            tasks.append(task_info[0])
+        env = AntDirEnv(tasks, len(tasks), include_goal = False)
+        max_ep_len = 200
+        env_targets = [500]
+        scale = 500.
+        dversion = 0 #compatible
     else:
         if 'metaworld' in total_env:
             task = metaworld.MT1(env_name).train_tasks[0]
@@ -101,13 +141,13 @@ def gen_env(env_name, seed=1, total_env=None, num_eval_episodes=0):
     return env, max_ep_len, env_targets, scale, dversion
 
 
-def get_env_list(env_name_list, device, total_env=None, seed=1, num_eval_episodes=10):
+def get_env_list(env_name_list, device, total_env=None, seed=1, num_eval_episodes=10, config_save_path=None):
     info = {} # store all the attributes for each env
     env_list = []
     
     for env_name in env_name_list:
         info[env_name] = {}
-        env, max_ep_len, env_targets, scale, dversion = gen_env(env_name=env_name, seed=seed, total_env=total_env, num_eval_episodes=num_eval_episodes)
+        env, max_ep_len, env_targets, scale, dversion = gen_env(env_name=env_name, seed=seed, total_env=total_env, num_eval_episodes=num_eval_episodes, config_save_path=config_save_path)
         info[env_name]['max_ep_len'] = max_ep_len
         info[env_name]['env_targets'] = env_targets
         info[env_name]['scale'] = scale

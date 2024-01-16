@@ -157,7 +157,12 @@ def prompt_evaluate_episode_rtg(
         actions[-1] = action
         action = action.detach().cpu().numpy()
 
-        state, reward, done, truncate, infos = env.step(action)
+        res = env.step(action)
+        if len(res) == 5:
+            state, reward, done, truncate, infos = res
+        else:
+            state, reward, done, infos = res
+            truncate = False
 
         cur_state = torch.from_numpy(state).to(device=device).reshape(1, state_dim)
         states = torch.cat([states, cur_state], dim=0)
@@ -179,7 +184,7 @@ def prompt_evaluate_episode_rtg(
 
         episode_return += reward
         episode_length += 1
-        if infos['success'] > 1e-8:
+        if 'success' in infos and infos['success'] > 1e-8:
            success = 1
 
         if done or truncate:
