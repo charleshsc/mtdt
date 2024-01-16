@@ -227,7 +227,7 @@ class PromptSequenceTrainer:
             self.eval_fns = [eval_episodes(tar, info[env_name], variant, env_list[env_id], env_name) for tar in info[env_name]['env_targets']]
             self.get_prompt = get_prompt(prompt_trajectories_list[env_id], prompt_info[env_name], variant)
             if not no_prompt:
-                self.prompt = flatten_prompt(self.get_prompt(index=0), batch_size=1)
+                self.prompt = flatten_prompt(self.get_prompt(index=-1), batch_size=1)
             else:
                 self.prompt = None
             
@@ -253,16 +253,19 @@ class PromptSequenceTrainer:
         self.logger.record_tabular('Iteration', iter_num)
         for k, v in logs.items():
             self.logger.record_tabular(k, float(v))
-            env = k.split('/')[1].split('_')[0]
-            if 'target' not in k.split('/')[1].split('_')[1]:
-                env = env + k.split('/')[1].split('_')[1]
 
             if 'return_mean' in k:
+                env = k.split('/')[1].split('_')[0]
+                if 'target' not in k.split('/')[1].split('_')[1]:
+                    env = env + k.split('/')[1].split('_')[1]
                 if env not in total_return_mean.keys():
                     total_return_mean[env] = float(v)
                 elif total_return_mean[env] < float(v):
                     total_return_mean[env] = float(v)
             if 'success_mean' in k:
+                env = k.split('/')[1].split('_')[0]
+                if 'target' not in k.split('/')[1].split('_')[1]:
+                    env = env + k.split('/')[1].split('_')[1]
                 if env not in total_success_mean.keys():
                     total_success_mean[env] = float(v)
                 elif total_success_mean[env] < float(v):
