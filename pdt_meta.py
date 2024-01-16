@@ -263,7 +263,7 @@ def experiment_mix_env(
                 logger.dump_tabular() 
                 seperate_test = True
                 #group='test-seperate'
-                if (iter + 1) % args.test_eval_seperate_interval == 0 and 'ML1' not in variant['env']:
+                if (iter + 1) % args.test_eval_seperate_interval == 0 and 'MetaWorld' in variant['env']:
                     seperate_test = True
                     group='test-seperate'
                 else:
@@ -414,7 +414,7 @@ if __name__ == '__main__':
 
     parser.add_argument('--eta_min', type=int, default=10)
     parser.add_argument('--eta_max', type=int, default=1000)
-    parser.add_argument('--sparsity', type=float, default=0.5)
+    parser.add_argument('--sparsity', type=float, default=0.8)
     parser.add_argument('--mask_change_max', type=float, default=30)
     parser.add_argument('--gamma', type=float, default=10)
     parser.add_argument('--merge_thres', type=float, default=1.)
