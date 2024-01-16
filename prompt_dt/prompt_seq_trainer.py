@@ -253,8 +253,11 @@ class PromptSequenceTrainer:
         self.logger.record_tabular('Iteration', iter_num)
         for k, v in logs.items():
             self.logger.record_tabular(k, float(v))
+            env = k.split('/')[1].split('_')[0]
+            if 'target' not in k.split('/')[1].split('_')[1]:
+                env = env + k.split('/')[1].split('_')[1]
+
             if 'return_mean' in k:
-                env = k.split('/')[1].split('_')[0]
                 if env not in total_return_mean.keys():
                     total_return_mean[env] = float(v)
                 elif total_return_mean[env] < float(v):
