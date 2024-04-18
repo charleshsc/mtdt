@@ -6,7 +6,6 @@ import torch
 import time
 from wandb import env
 from .prompt_utils import flatten_prompt
-from .fl_utils import apply_mask_grad, apply_mask_model, load_original_parameters, apply_final_mask, cosine_annealing, mask_grow, mask_death, parameters_to_gradvector
 import copy
 from tqdm import tqdm, trange
 
@@ -28,10 +27,6 @@ class SequenceTrainer:
         self.get_prompt = get_prompt
         self.prompt = self.get_prompt() # sample prompt data when initialization
         self.get_prompt_batch = get_prompt_batch
-
-        self.eta_min = variant['eta_min']
-        self.eta_max = variant['eta_max']
-        self.sparsity = variant['sparsity']
 
         self.start_time = time.time()
         self.logger = logger

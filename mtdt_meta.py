@@ -6,7 +6,6 @@ import wandb
 import os
 import time
 import pathlib
-from prompt_dt.fl_utils import * 
 import argparse
 import pickle
 import random
@@ -18,14 +17,10 @@ from tqdm import trange
 
 from prompt_dt.prompt_decision_transformer import PromptDecisionTransformer
 from prompt_dt.seq_trainer import SequenceTrainer
-from prompt_dt.taming_trainer import TamingTrainer
 from prompt_dt.prompt_utils import get_env_list, report_parameters
-from prompt_dt.prompt_utils import get_prompt_batch, get_prompt, get_batch, get_batch_finetune
+from prompt_dt.prompt_utils import get_prompt_batch, get_prompt, get_batch
 from prompt_dt.prompt_utils import process_total_data_mean, load_data_prompt, process_info, load_meta_data_prompt
-from prompt_dt.prompt_utils import eval_episodes, finetune_hf_episodes, finetune_hf_episodes_offline
-from prompt_dt.fl_utils import ERK_maskinit
-
-from prompt_dt.PCGrad import PCGrad, CAGrad
+from prompt_dt.prompt_utils import eval_episodes
 
 from collections import namedtuple
 import json, pickle, os
@@ -56,8 +51,8 @@ mt50_task_list = [
     'hammer-v2','peg-unplug-side-v2', 'reach-wall-v2', 'stick-push-v2', 
     'stick-pull-v2', 'box-close-v2'
     ]
-mt5_task_list = ['basketball-v2', 'bin-picking-v2', 'button-press-topdown-v2',
-    'button-press-v2', 'button-press-wall-v2',]
+mt5_task_list = ['basketball-v2-0', 'bin-picking-v2-0', 'button-press-topdown-v2-0',
+    'button-press-v2-0', 'button-press-wall-v2-0',]
 mt30_task_list = ['basketball-v2', 'bin-picking-v2', 'button-press-topdown-v2',
     'button-press-v2', 'button-press-wall-v2', 'coffee-button-v2',
     'coffee-pull-v2', 'coffee-push-v2', 'dial-turn-v2', 'disassemble-v2', 'door-close-v2', 'door-lock-v2',
@@ -65,7 +60,12 @@ mt30_task_list = ['basketball-v2', 'bin-picking-v2', 'button-press-topdown-v2',
     'faucet-close-v2',  'handle-press-side-v2', 'handle-press-v2', 'handle-pull-side-v2', 'handle-pull-v2',
     'lever-pull-v2', 'peg-insert-side-v2', 'pick-place-wall-v2', 'pick-out-of-hole-v2', 'reach-v2', 'push-back-v2', 'push-v2',]
 
-mt250_task_list = [s+f'-{i}' for s in mt5_task_list for i in range(5)]
+
+mt250_task_list = [s+f'-{i}' for s in mt50_task_list for i in range(5)]
+mt5_task_list = [s+f'-{i}' for s in mt5_task_list for i in range(5)]
+mt30_task_list = [s+f'-{i}' for s in mt30_task_list for i in range(5)]
+mt50_task_list = [s+f'-{i}' for s in mt50_task_list for i in range(5)]
+
 
 
 def experiment_mix_env(
@@ -82,38 +82,28 @@ def experiment_mix_env(
     test_dataset_mode = variant['test_dataset_mode']
     train_prompt_mode = variant['train_prompt_mode']
     test_prompt_mode = variant['test_prompt_mode']
-    HF = variant['with_hf']
     Evaluation = variant['evaluation']
-    hf_offline = variant['hf_offline']
     seed = variant['seed']
     set_seed(variant['seed'])
-    m = variant['m']
-    smooth = variant['smooth']
     env_name_ = variant['env']
     
     ######
     # construct train and test environments
     ######
-    eta_min=0
-    eta_max=variant["mask_change_max"]
-    cur_dir = os.getcwd()
-    data_save_path = 'MT250'
-    # data_save_path = 'MT50/dataset'
+    data_save_path = variant['dataset_path']
     save_path = variant['save_path']
     timestr = time.strftime("%y%m%d-%H%M%S")
     
-    # if '50' in variant['prefix_name']:
-    #     train_env_name_list, test_env_name_list = mt50_task_list, mt50_task_list
-    # elif '30' in variant['prefix_name']:
-    #     train_env_name_list, test_env_name_list = mt30_task_list, mt30_task_list
-    # elif '5' in variant['prefix_name']:
-    #     train_env_name_list, test_env_name_list = mt5_task_list, mt5_task_list
-    # else:
-    #     raise NotImplementedError("Please use the 50,30,5")
-
-    
-    train_env_name_list, test_env_name_list = mt10_task_list, mt10_task_list
-
+    if '250' in variant['prefix_name']:
+        train_env_name_list, test_env_name_list = mt250_task_list, mt250_task_list
+    elif '50' in variant['prefix_name']:
+        train_env_name_list, test_env_name_list = mt50_task_list, mt50_task_list
+    elif '30' in variant['prefix_name']:
+        train_env_name_list, test_env_name_list = mt30_task_list, mt30_task_list
+    elif '5' in variant['prefix_name']:
+        train_env_name_list, test_env_name_list = mt5_task_list, mt5_task_list
+    else:
+        raise NotImplementedError("Please use the 250,50,30,5")
 
     # training envs
     info, _ = get_env_list(train_env_name_list, device, total_env='metaworld', seed=seed)
@@ -129,8 +119,6 @@ def experiment_mix_env(
     exp_prefix = f'{Evaluation_token}-{seed}-{timestr}-{n_layer}l{n_head}h'
     if variant['no_prompt']:
         exp_prefix += '_NO_PROMPT'
-    if variant['finetune']:
-        exp_prefix += '_FINETUNE'
     if variant['no_r']:
         exp_prefix += '_NO_R'
     if variant['suboptimal']:
@@ -224,8 +212,6 @@ def experiment_mix_env(
         model_post_fix = '_TRAIN_'+variant['train_prompt_mode']+'_TEST_'+variant['test_prompt_mode']
         if variant['no_prompt']:
             model_post_fix += '_NO_PROMPT'
-        if variant['finetune']:
-            model_post_fix += '_FINETUNE'
         if variant['no_r']:
             model_post_fix += '_NO_R'
         
@@ -299,6 +285,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--env', type=str, nargs='+', default='hopper') 
     parser.add_argument('--dataset_mode', type=str, default='medium')
+    parser.add_argument('--dataset_path', type=str, default='./MT250')
     parser.add_argument('--seed', type=int, default=123)
     parser.add_argument('--test_dataset_mode', type=str, default='medium')
     parser.add_argument('--train_prompt_mode', type=str, default='medium')
