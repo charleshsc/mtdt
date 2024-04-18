@@ -51,8 +51,8 @@ mt50_task_list = [
     'hammer-v2','peg-unplug-side-v2', 'reach-wall-v2', 'stick-push-v2', 
     'stick-pull-v2', 'box-close-v2'
     ]
-mt5_task_list = ['basketball-v2-0', 'bin-picking-v2-0', 'button-press-topdown-v2-0',
-    'button-press-v2-0', 'button-press-wall-v2-0',]
+mt5_task_list = ['basketball-v2', 'bin-picking-v2', 'button-press-topdown-v2',
+    'button-press-v2', 'button-press-wall-v2',]
 mt30_task_list = ['basketball-v2', 'bin-picking-v2', 'button-press-topdown-v2',
     'button-press-v2', 'button-press-wall-v2', 'coffee-button-v2',
     'coffee-pull-v2', 'coffee-push-v2', 'dial-turn-v2', 'disassemble-v2', 'door-close-v2', 'door-lock-v2',
